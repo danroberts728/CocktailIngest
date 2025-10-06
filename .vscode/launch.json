@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Scrape IBA",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": [
+        "scrape",
+        "--source",
+        "iba"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "windows": {
+        "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+      }
+    },
+    {
+      "name": "Python: Scrape CocktailDb",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": [
+        "scrape",
+        "--source",
+        "cocktaildb"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "windows": {
+        "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+      }
+    },
+    {
+      "name": "Python: Merge (all sources)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": [
+        "merge",
+        "--inputs",
+        "data/sources/*.jsonl"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "windows": {
+        "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+      }
+    },
+    {
+      "name": "Python: Validate canonical.json",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": [
+        "validate",
+        "--file",
+        "data/canonical.json"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "windows": {
+        "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+      }
+    },
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "windows": {
+        "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+      }
+    }
+  ]
+}

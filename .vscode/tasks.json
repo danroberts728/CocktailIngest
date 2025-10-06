@@ -1,0 +1,74 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "sourceName",
+      "type": "pickString",
+      "description": "Choose a source to scrape",
+      "options": [
+        "iba"
+      ],
+      "default": "iba"
+    },
+    {
+      "id": "mergeGlobs",
+      "type": "promptString",
+      "description": "Glob(s) for JSONL to merge",
+      "default": "data/sources/*.jsonl"
+    },
+    {
+      "id": "validateFile",
+      "type": "promptString",
+      "description": "Path to canonical.json",
+      "default": "data/canonical.json"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Create venv",
+      "type": "shell",
+      "command": "python -m venv .venv",
+      "problemMatcher": []
+    },
+    {
+      "label": "Install requirements",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/pip install -r requirements.txt",
+      "windows": {
+        "command": ".venv\\\\Scripts\\\\pip install -r requirements.txt"
+      },
+      "dependsOn": "Create venv",
+      "problemMatcher": []
+    },
+    {
+      "label": "Scrape (selected source)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python main.py scrape --source ${input:sourceName}",
+      "windows": {
+        "command": ".venv\\\\Scripts\\\\python main.py scrape --source ${input:sourceName}"
+      },
+      "dependsOn": "Install requirements",
+      "problemMatcher": []
+    },
+    {
+      "label": "Merge (globs)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python main.py merge --inputs ${input:mergeGlobs}",
+      "windows": {
+        "command": ".venv\\\\Scripts\\\\python main.py merge --inputs ${input:mergeGlobs}"
+      },
+      "dependsOn": "Install requirements",
+      "problemMatcher": []
+    },
+    {
+      "label": "Validate (file)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python main.py validate --file ${input:validateFile}",
+      "windows": {
+        "command": ".venv\\\\Scripts\\\\python main.py validate --file ${input:validateFile}"
+      },
+      "dependsOn": "Install requirements",
+      "problemMatcher": []
+    }
+  ]
+}
