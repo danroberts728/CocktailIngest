@@ -1,0 +1,58 @@
+{
+    "_section1": "Add space after ml",
+    "/([0-9][0-9])ml/": "\\1 ml",
+
+    "_section2": "ml Conversions to tsp and ounces",
+    "/^5 ml/": "1 tsp",
+    "7.5 ml": "1/4 oz",
+    "10 ml": "1/3 oz",
+    "12.5 ml": "2.5 tsp",
+    "15 ml": "0.5 oz",
+    "20 ml": "2/3 oz",
+    "22.5 ml": "3/4 oz",
+    "25 ml": "0.85 oz",
+    "30 ml": "1 oz",
+    "35 ml": "1 oz",
+    "40 ml": "1 1/3 oz",
+    "45 ml": "1.5 oz",
+    "50 ml": "1 2/3 oz",
+    "52.5 ml": "1 3.4 oz",
+    "60 ml": "2 oz",
+    "75 ml": "2.5 oz",
+    "90 ml": "3 oz",
+    "100 ml": "3.5 oz",
+    "120 ml": "4 oz",
+    "150 ml": "5 oz",
+
+    "_section3": "word to number",
+    "a dash": "1 dash",
+    "^dash of": "1 dash",
+    "a splash": "1 splash",
+    "a pinch": "1 pinch",
+    "few": "2-5",
+    "^splash of": "1 splash",
+
+    "_section4": "Bar spoon debacles",
+    "a bar spoon": "1 barspoon",
+    "Bar Spoons": "barspoons",
+    "Bar Spoon": "barspoon",
+    "/[^0-9] bar spoon/": "1 barspoon",
+
+    "_section5": "Standardized Liquors",
+    "bitters": "Bitters",
+    "bénédictine": "Benedictine",
+    "bourbon whiskey": "Bourbon",
+    "galiano": "Galliano",
+
+    "_section6": "English",
+    "é": "e",
+    "è": "e",
+
+    "_section7": "Of",
+    "drops of": "drops",
+
+    "_section8": "Errata",
+    "/([0-9]+) ?to ?([0-9]+)/": "\\1-\\2",
+    "/([0-9]+)\/([0-9]+)/": "\\1-\\2"
+
+}

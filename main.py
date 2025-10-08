@@ -1,5 +1,8 @@
 
-import argparse, json, glob, sys
+import argparse
+import json
+import glob
+import sys
 from pathlib import Path
 from typing import List
 from app.models import RecipeVersion
@@ -7,8 +10,7 @@ from scrapers.base import get_scraper  # registry wired by imports below
 from pipeline.dedupe import merge_to_canonical
 from pipeline.export_pack import build_pack, write_pack
 
-import scrapers.iba 
-import scrapers.cocktaildb
+import scrapers.iba # noqa: F401
 
 def write_jsonl(path: Path, objs):
     with path.open("w", encoding="utf-8") as f:
@@ -43,7 +45,7 @@ def _dict_to_version(d) -> RecipeVersion:
     )
 
 def cmd_scrape(args):
-    outdir = Path("data/sources"); outdir.mkdir(parents=True, exist_ok=True)
+    outdir = Path("data/sources"); outdir.mkdir(parents=True, exist_ok=True)  # noqa: E702
     scraper = get_scraper(args.source, delay=args.delay)
     versions = list(scraper.iter_recipes())
     path = outdir / f"{args.source}.jsonl"

@@ -4,10 +4,10 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
-from typing import Iterator, List
+from typing import List
 from app.models import RecipeVersion, Ingredient, Attribution
 from scrapers.base import SourceScraper, register_source
-from utils.text import slugify, normalize_whitespace, looks_like_ingredient, split_measure_ingredient
+from utils.text import slugify, normalize_whitespace, looks_like_ingredient, split_measure_ingredient, replace_text_by_rule
 
 BASE = "https://iba-world.com/"
 ALL_URL = urljoin(BASE, "cocktails/all-cocktails/")
@@ -68,7 +68,7 @@ class IBAScraper(SourceScraper):
         name = title.get_text(strip=True) if title else "Unknown IBA Cocktail"
         name_slug = slugify(name)
 
-        img = soup.find("img")
+        img = soup.find("img", {"class": "attachment-medium_large"})
         image = img["src"] if img and img.get("src") else None
         if image and image.startswith("//"):
             image = "https:" + image
@@ -76,32 +76,37 @@ class IBAScraper(SourceScraper):
             image = urljoin(BASE, image)
 
         ingredients = []
-        hdr = None
+        ingredients_header = None
         for tag in soup.find_all(["h2","h3","h4","h5","h6"]):
             if "ingredient" in tag.get_text(strip=True).lower():
-                hdr = tag
+                ingredients_header = tag
                 break
-        if hdr:
-            lst = hdr.find_next(["ul","ol"])
+        if ingredients_header:
+            lst = ingredients_header.find_next(["ul","ol"])
             if lst:
                 for li in lst.find_all("li"):
                     line = normalize_whitespace(li.get_text(" ", strip=True))
                     if not line:
                         continue
-                    m, n = split_measure_ingredient(line)
+                    tranformed_line = replace_text_by_rule(line)
+                    m, n = split_measure_ingredient(tranformed_line)
                     ingredients.append(Ingredient(id=slugify(n), name=n, measure=m))
         if not ingredients:
             for li in soup.select("li"):
                 line = normalize_whitespace(li.get_text(' ', strip=True))
                 if looks_like_ingredient(line):
-                    m, n = split_measure_ingredient(line)
+                    tranformed_line = replace_text_by_rule(line)
+                    m, n = split_measure_ingredient(tranformed_line)
                     ingredients.append(Ingredient(id=slugify(n), name=n, measure=m))
 
-        seen = set(); uniq = []
+        seen = set()
+        uniq = []
         for ing in ingredients:
             key = (ing.id, ing.measure or "")
-            if key in seen: continue
-            seen.add(key); uniq.append(ing)
+            if key in seen: 
+                continue
+            seen.add(key)
+            uniq.append(ing)
         ingredients = uniq
 
         instructions = ""
@@ -111,19 +116,35 @@ class IBAScraper(SourceScraper):
                 for sib in tag.find_all_next():
                     if sib.name and sib.name.lower() in ["h1","h2","h3","h4","h5","h6"]:
                         break
-                    if sib.name in ("p","div"):
-                        t = sib.get_text(" ", strip=True); 
-                        if t: parts.append(t)
+                    if sib.name in ["p"]:
+                        t = sib.get_text(" ", strip=True)
+                        if t: 
+                            parts.append(t)
                     if sib.name in ("ul","ol"):
                         for li in sib.find_all("li"):
                             t = li.get_text(" ", strip=True)
-                            if t: parts.append(t)
+                            if t:
+                                parts.append(t)
                 instructions = "\\n".join(parts).strip()
                 break
         if not instructions:
             p = soup.find("p")
             if p:
                 instructions = p.get_text(" ", strip=True)
+    
+        garnish = None
+        for tag in soup.find_all(["h2","h3","h4","h5","h6"]):
+            if any(k in tag.get_text(strip=True).lower() for k in ["garnish"]):
+                parts = []
+                for sib in tag.find_all_next():
+                    if sib.name and sib.name.lower() in ["h1","h2","h3","h4","h5","h6"]:
+                        break
+                    if sib.name in ["p"]:
+                        t = sib.get_text(" ", strip=True)
+                        if t:
+                            parts.append(t)
+                garnish = "\\n".join(parts).strip()
+                break
 
         glass = None
         for tag in soup.find_all(["p","li","span"]):
@@ -137,13 +158,6 @@ class IBAScraper(SourceScraper):
             t = a.get_text(strip=True)
             if t:
                 tags.append(t)
-
-        garnish = None
-        for tag in soup.find_all(["p","li"]):
-            t = tag.get_text(" ", strip=True)
-            if "garnish" in t.lower():
-                garnish = t
-                break
 
         rv = RecipeVersion(
             id=f"iba::{name_slug}",
