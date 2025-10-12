@@ -87,7 +87,8 @@ def build_pack(canonical_path: str, source_jsonls: List[str]) -> dict:
     }
 
 def write_pack(pack: dict, outdir: str, split: bool = True):
-    out = Path(outdir); out.mkdir(parents=True, exist_ok=True)  # noqa: E702
+    out = Path(outdir)
+    out.mkdir(parents=True, exist_ok=True)
     # Always write a manifest
     (out / "manifest.json").write_text(json.dumps(pack["manifest"], ensure_ascii=False, indent=2), encoding="utf-8")
 
