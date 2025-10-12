@@ -44,7 +44,7 @@ class CocktailDbScraper(SourceScraper):
                     measure= ingredient_measure
                 )
             )
-        drink_name = text.replace_text_by_rule(str["strDrink"])
+        drink_name = text.replace_text_by_rule(drink["strDrink"])
         drink_slug = text.slugify(drink_name)
 
         recipeVersion = models.RecipeVersion(
