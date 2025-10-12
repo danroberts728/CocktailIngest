@@ -26,19 +26,32 @@ class CocktailDbScraper(SourceScraper):
         return r.text
 
     def _parse_recipe(self, drink):
-        recipeVersion = models.RecipeVersion(
-            id=f"cocktaildb:{text.slugify(drink['strDrink'])}",
-            name=drink["strDrink"],
-            name_slug=text.slugify(drink["strDrink"]),
-            ingredients=[
+        ingredient_list = []
+        for i in range (1,16):
+            if drink.get(f"strIngredient{i}") is None:
+                continue
+            ingredient_name = text.replace_text_by_rule(drink[f"strIngredient{i}"])
+            ingredient_measure = (
+                text.replace_text_by_rule(drink[f"strMeasure{i}"])
+                if drink.get(f"strMeasure{i}")
+                else ""
+            ),
+            ingredient_id = text.slugify(ingredient_name)
+            ingredient_list.append(
                 models.Ingredient(
-                    id=text.slugify(text.replace_text_by_rule(drink[f"strIngredient{i}"])),
-                    name=text.replace_text_by_rule(drink[f"strIngredient{i}"]),
-                    measure=text.replace_text_by_rule(drink[f"strMeasure{i}"]),
+                    id= ingredient_id,
+                    name= ingredient_name,
+                    measure= ingredient_measure
                 )
-                for i in range(1, 16)
-                if drink.get(f"strIngredient{i}")
-            ],
+            )
+        drink_name = text.replace_text_by_rule(str["strDrink"])
+        drink_slug = text.slugify(drink_name)
+
+        recipeVersion = models.RecipeVersion(
+            id=f"cocktaildb:{drink_slug}",
+            name=drink_name,
+            name_slug=drink_slug,
+            ingredients=ingredient_list,
             instructions=drink["strInstructions"],
             glass=drink["strGlass"],
             tags=[],
@@ -52,12 +65,12 @@ class CocktailDbScraper(SourceScraper):
             ),
         )
         return recipeVersion
-    
+
     def _get_filters(self, kind, property):
         url = BASE + f"list.php?{kind}=list"
         data = requests.get(url, timeout=20).json()
         return [d[property] for d in data.get("drinks", []) if d.get(property)]
-    
+
     def _get_drink_ids(self, kind: str, value: str):
         url = BASE + f"filter.php?{kind}={value.replace(' ', '+')}"
         data = requests.get(url, timeout=20).json()
@@ -68,19 +81,33 @@ class CocktailDbScraper(SourceScraper):
 
         # This dataset has a lot of not-really-cocktail drinks, so
         # we're goign to limit this drinks with known liquor ingredients
-        ingredients = self._get_filters('i', 'strIngredient1')
+        ingredients = self._get_filters("i", "strIngredient1")
         allowed_ingredient_substr = [
-            'rum', 'bourbon', 'vodka', 'gin', 'whiskey', 'tequila', 'brandy', 'southern comfort',
-            'amaretto', 'scotch', 'cognac', 'johnnie walker', 'everclear', 'absolut', 'jack daniels'
+            "rum",
+            "bourbon",
+            "vodka",
+            "gin",
+            "whiskey",
+            "tequila",
+            "brandy",
+            "southern comfort",
+            "amaretto",
+            "scotch",
+            "cognac",
+            "johnnie walker",
+            "everclear",
+            "absolut",
+            "jack daniels",
         ]
-        filtered_ingredients = [i for i in ingredients if any(s in i.lower() for s in allowed_ingredient_substr)]
+        filtered_ingredients = [
+            i
+            for i in ingredients
+            if any(s in i.lower() for s in allowed_ingredient_substr)
+        ]
         for i in filtered_ingredients:
-            drinkIds.update(self._get_drink_ids('i', i))
+            drinkIds.update(self._get_drink_ids("i", i))
 
-
-        all_urls = [
-            f"{LOOKUP_URL}{str(id)}" for id in drinkIds
-        ]
+        all_urls = [f"{LOOKUP_URL}{str(id)}" for id in drinkIds]
         for url in all_urls:
             with urllib.request.urlopen(url) as page:
                 data = json.load(page)

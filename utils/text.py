@@ -2,6 +2,9 @@ import json
 import re
 import unicodedata
 
+_SUBS_CACHE = None        # dict of rules
+_SUBS_KEYS = None         # keys sorted by length desc
+
 def slugify(s: str) -> str:
     s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
     s = s.lower()
@@ -57,22 +60,25 @@ def replace_text_by_rule(line: str) -> str:
     # Hard-coded path to the substitutions file
     SUBS_PATH = "./utils/substitutes.json"
 
-    # Load substitutions
-    with open(SUBS_PATH, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    global _SUBS_CACHE, _SUBS_KEYS  # , _SUBS_MTIME
 
-    # Allow for a list with one dict or a plain dict
-    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
-        data = data[0]
-    elif not isinstance(data, dict):
-        raise ValueError("substitutes.json must be a dict or a list with one dict")
+    # Lazy-load (and cache) the rules on first use
+    if _SUBS_CACHE is None:
+        with open(SUBS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
-    # Sort keys so longer patterns replace first
-    keys = sorted(data.keys(), key=len, reverse=True)
+        # Allow for a list with one dict or a plain dict (same behavior as before)
+        if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
+            data = data[0]
+        elif not isinstance(data, dict):
+            raise ValueError("substitutes.json must be a dict or a list with one dict")
+
+        _SUBS_CACHE = data
+        _SUBS_KEYS = sorted(_SUBS_CACHE.keys(), key=len, reverse=True)
 
     out = line
-    for key in keys:
-        val = data[key]
+    for key in _SUBS_KEYS:
+        val = _SUBS_CACHE[key]
         # Regex key: starts and ends with /
         if isinstance(key, str) and key.startswith("/") and key.endswith("/"):
             pattern = key[1:-1]
