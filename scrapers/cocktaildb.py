@@ -12,6 +12,7 @@ BASE = "https://www.thecocktaildb.com/api/json/v1/1/"
 LOOKUP_URL = BASE + "lookup.php?i="
 HEADERS = {"User-Agent": "CocktailIngest/1.0 (+for personal noncommercial use)"}
 
+ALLOWED_CATEGORIES = ['Cocktail']
 
 @register_source("cocktaildb")
 class CocktailDbScraper(SourceScraper):
@@ -115,7 +116,10 @@ class CocktailDbScraper(SourceScraper):
                     continue
                 for drink in data["drinks"]:
                     try:
-                        yield self._parse_recipe(drink)
+                        if drink["strCategory"] in ALLOWED_CATEGORIES:
+                            yield self._parse_recipe(drink)
+                        else:
+                            continue
                     except Exception as e:
                         print(e)
                         continue
